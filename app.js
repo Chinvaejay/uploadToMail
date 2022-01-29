@@ -1,5 +1,6 @@
 const fs = require('fs/promises');
 const path = require('path');
+const cors = require('cors');
 const express = require('express');
 const bodyParser = require('body-parser');
 const multer = require('multer');
@@ -11,6 +12,7 @@ var upload = multer({
 
 const app = express();
 
+app.use(cors());
 app.use(bodyParser.json());
 
 app.post('/upload', upload.single('file'), async function (req, res) {
@@ -30,18 +32,19 @@ app.post('/upload', upload.single('file'), async function (req, res) {
 
 app.post('/send', async function (req, res) {
   console.log(req.body);
-  const { username, attachments = [] } = req.body;
+  const { username, attachments = [], tel = '无', remark = '无' } = req.body;
   if (!username) {
     res.json({ msg: '请输入你的名字' });
     return;
   }
+
   if (!attachments || attachments.length === 0) {
     res.json({ msg: '你还没有是传文件呢' });
     return;
   }
   try {
-    await sendMail(username, attachments);
-    res.json({ msg: '发送成功' });
+    await sendMail(username, attachments, tel, remark);
+    res.json({ msg: '发送成功, 我们会尽快为你打印' });
     return;
   } catch (e) {
     console.log(e);
@@ -54,4 +57,4 @@ app.get('/', function (req, res) {
   res.redirect('https://www.baidu.com');
 });
 
-app.listen(3001);
+app.listen(process.env.PORT || 3001);
